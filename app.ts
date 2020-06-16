@@ -195,7 +195,7 @@ router.post("/api/create_poll", async (context) => {
       // Convert to JSON from string
       const body = JSON.parse(rawBody.value);
 
-      if (!body.poll_id || !body.user_choice_index || !body.user_id) {
+      if (!body.poll_id || body.user_choice_index == undefined || !body.user_id) {
         context.response.body = {
           success: false,
           info:
@@ -263,7 +263,7 @@ router.post("/api/create_poll", async (context) => {
       // An error occured
       context.response.body = {
         success: false,
-        data: err.message,
+        info: err.message,
       };
       return;
     }
