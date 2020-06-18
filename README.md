@@ -12,7 +12,7 @@ The API has 3 endpoints for creating a new poll, fetching a poll and voting to a
 * **/api/create_poll** (POST)
   * This endpoint is used for creating new polls
   * Expects a stringified JSON that consists of poll_title and poll_options keys, returns JSON
-  * There must be atlest 2 options and at least 1 character length of poll title
+  * There must be at least 2 options and at least 1 character length of poll title
   * ```
     Example request body
     
@@ -59,7 +59,7 @@ The API has 3 endpoints for creating a new poll, fetching a poll and voting to a
     }
     ```
   * ```    
-    The user has note voted yet
+    The user has not voted yet
     
     {
         "success": true,
