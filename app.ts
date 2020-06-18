@@ -1,7 +1,8 @@
-import { Application, Router, send } from "https://deno.land/x/oak/mod.ts";
+import { Application, Router, send, isHttpError, Status } from "https://deno.land/x/oak/mod.ts";
 import { MongoClient } from "https://deno.land/x/mongo@v0.8.0/mod.ts";
 import { config } from "https://deno.land/x/dotenv/mod.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
+import { existsSync } from "https://deno.land/std/fs/mod.ts";
 
 const PORT_NUMBER = 7777;
 const { MONGO_DB_URI } = config();
@@ -277,10 +278,33 @@ app.use(router.allowedMethods());
 
 // Serve static content
 app.use(async (context) => {
-  await send(context, context.request.url.pathname, {
-    root: `${Deno.cwd()}/public`,
-    index: "index.html",
-  });
+  
+  const PUBLIC_FOLDER = 'public'
+
+  if(context.request.url.pathname == '/'){
+    await send(context, context.request.url.pathname, {
+      root: `${Deno.cwd()}/${PUBLIC_FOLDER}`,
+      index: "index.html",
+    });
+  }
+  else{
+
+    if(existsSync(Deno.cwd() + '/' + PUBLIC_FOLDER + '/' + context.request.url.pathname.split('/')[1])){
+      // This folder already exists
+      await send(context, context.request.url.pathname, {
+        root: `${Deno.cwd()}/${PUBLIC_FOLDER}`,
+        index: "index.html",
+      });
+    }
+    else{
+      // This folder doesn't exist, redirect to ./index.html (Vue js routing handles the rest)
+      await send(context, '/', {
+        root: `${Deno.cwd()}/${PUBLIC_FOLDER}`,
+        index: "index.html",
+      });
+    }
+  }
+
 });
 
 // Listen for incoming requests
