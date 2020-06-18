@@ -74,8 +74,9 @@ export default {
         }).then((r) => {
             r.json().then(response => {
                 if (response.success) {
-                    // Refresh the page
-                    v.$router.push({ path: 'poll', query: { id: v.pollID, t: new Date().getTime() }})
+                    // Notify the parent component to fetch the poll again
+                    // And show the results...
+                    v.$emit('fetchPoll')
                 }
                 else {
                     v.showModal(`Oops`, `We had a problem while counting your vote: ${response.info}, please try again.`)

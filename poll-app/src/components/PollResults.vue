@@ -1,6 +1,5 @@
 <template>
     <div id="pollResultsDiv">
-        <h1>poll results</h1>
     </div>
 </template>
 

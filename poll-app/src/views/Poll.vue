@@ -6,10 +6,16 @@
         <h3 class="col deep-purple-text text-darken-2">Question</h3>
       </div>
       <div class="row s12">
-        <h5 class="col" id="askedQuestion">{{pollQuestion}}</h5>
+        <h4 class="col" id="askedQuestion">{{pollQuestion}}</h4>
       </div>
       <PollResults v-bind:pollData="pollData" v-if="userVoted" />
-      <VoteToPoll v-bind:userIP="userIP" v-bind:pollID="pollID" v-bind:pollData="pollData" v-else />
+      <VoteToPoll
+        v-on:fetchPoll="fetchPoll"
+        v-bind:userIP="userIP"
+        v-bind:pollID="pollID"
+        v-bind:pollData="pollData"
+        v-else
+      />
       <div class="row s12" style="margin-top: 3rem;">
         <h5 class="col deep-purple-text text-darken-2">Share this poll</h5>
       </div>
@@ -90,72 +96,79 @@ export default {
       document.getElementById("modalTitle").innerHTML = title;
       document.getElementById("modalDescription").innerHTML = description;
       this.modalInstance.open();
-    }
-  },
-  mounted: async function() {
-    M.AutoInit();
-    var elems = document.querySelectorAll(".modal");
-    var instances = M.Modal.init(elems, {});
+    },
+    fetchPoll: async function() {
+      // Set as loading
+      this.isLoading = true;
+      this.userVoted = false;
 
-    this.modalInstance = instances[0];
+      // Get the poll id from the url
+      var url = new URL(window.location.href);
+      this.pollID = url.searchParams.get("id");
 
-    // Get the poll id from the url
-    var url = new URL(window.location.href);
-    this.pollID = url.searchParams.get("id");
-
-    // if ID is not provided in the url, show
-    // that this poll was not found, eventually
-    // redirect to the root page
-    if (!this.pollID) {
-      this.modalInstance.options.onCloseEnd = () => {
-      }
-      this.showModal(
-        "Oops",
-        `We couldn't quite understand which poll you are
-             looking for, the poll_id parameter is missing
-              in the url.`
-      )
-      return;
-    }
-
-    // Vue instance
-    let v = this;
-
-    this.userIP = await fetch("https://api6.ipify.org?format=json")
-      .then(response => response.json())
-      .then(data => data.ip)
-      .catch(err => {
-        v.modalInstance.options.onCloseEnd = () => {
-          v.$router.push({ path: '/'})
-        }
-        v.showModal(
+      // if ID is not provided in the url, show
+      // that this poll was not found, eventually
+      // redirect to the root page
+      if (!this.pollID) {
+        this.modalInstance.options.onCloseEnd = () => {
+          this.$router.push({ path: "/" });
+        };
+        this.showModal(
           "Oops",
-          `Your browser is restricting access to your IP,
-                 please deactivate shield or try accessing the 
-                 poll from a different browser; ${err}`
-        )
-
+          `We couldn't quite understand which poll you are
+              looking for, the poll_id parameter is missing
+                in the url.`
+        );
         return;
-      })
+      }
 
-    // Make a request to the back-end server to get the poll details
-    fetch(`/api/get_poll/${this.pollID}/${this.userIP}`, {
-      method: "GET"
-    })
-      .then(r => {
-        r.json().then(response => {
+      // Vue instance
+      let v = this;
+
+      this.userIP = await fetch("https://api6.ipify.org?format=json")
+        .then(response => response.json())
+        .then(data => data.ip)
+        .catch(err => {
+          v.modalInstance.options.onCloseEnd = () => {
+            v.$router.push({ path: "/" });
+          };
+          v.showModal(
+            "Oops",
+            `Your browser is restricting access to your IP,
+                  please deactivate shield or try accessing the 
+                 please deactivate shield or try accessing the 
+                  please deactivate shield or try accessing the 
+                  poll from a different browser; ${err}`
+          );
+
+          return;
+        });
+
+      // Make a request to the back-end server to get the poll details
+      let serverResponse = await fetch(
+        `/api/get_poll/${this.pollID}/${this.userIP}`,
+        {
+          method: "GET"
+        }
+      )
+        
+
+      if (serverResponse.ok) {
+        // Get the body
+        let response = await serverResponse.json();
+
+        try {
           this.pollData = response;
           if (!response.success) {
             v.modalInstance.options.onCloseEnd = () => {
-              v.$router.push({ path: '/'})
+              v.$router.push({ path: "/" });
             };
             v.showModal(
               "Oops",
               `We couldn't access the poll. ${response.info}`
             );
           } else {
-
-            v.pollQuestion = response.poll_title
+            v.pollQuestion = response.poll_title;
             if (!response.user_voted) {
               // User has not voted update the UI
               this.userVoted = false;
@@ -166,17 +179,31 @@ export default {
 
             this.isLoading = false;
           }
-        });
-      })
-      .catch(function(error) {
+        } catch (error) {
+          // Something went wrong...
+          v.showModal("Oops", `We couldn't access the poll ${error}`);
+        }
+      } else {
+        // The http request was not successful
         v.modalInstance.options.onCloseEnd = () => {
-          v.$router.push({ path: '/'})
+          v.$router.push({ path: "/" });
         };
         v.showModal(
           "Oops",
-          `An error occured while fetching the poll: ${error}`
+          `We couldn't access the poll. (Can't access the back-end server)`
         );
-      });
+      }
+    }
+  },
+  mounted: async function() {
+    M.AutoInit();
+    var elems = document.querySelectorAll(".modal");
+    var instances = M.Modal.init(elems, {});
+
+    this.modalInstance = instances[0];
+
+    // Fetch the poll
+    this.fetchPoll();
   }
 };
 </script>
