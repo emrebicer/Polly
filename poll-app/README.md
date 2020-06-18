@@ -1,4 +1,4 @@
-# poll-app
+# User interface for Polly, with Vue
 
 ## Project setup
 ```
