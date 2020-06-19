@@ -19,6 +19,8 @@ echo "MONGO_DB_URI={YOUR_SECRET_MONGODB_URI}" > .env    # Append the uri to the 
 ```bash
 deno run --allow-net --allow-write --allow-read --allow-plugin --unstable app.ts
 ```
+## Test on Heroku
+https://pollyy.herokuapp.com
 ## Back-end
 All of the API endpoints and the website itself is served on **Deno** from a single file called app.ts
 
