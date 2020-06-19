@@ -125,9 +125,7 @@ export default {
           body: postDataString
       }).then((r) =>{
           r.json().then(response=>{
-              console.log(response)
               if(response.success){
-                  console.log('Created the poll succesfull')
                   // Navigate to the poll page
                   this.$router.push({ path: 'poll', query: { id: response.poll_id }})
               }
@@ -136,7 +134,6 @@ export default {
               }
           })
       }).catch(function(error) {
-          console.log("An error occured while creating poll:", error)
           v.showModal(`Oops`, `An error occured while creating poll:, ${error}`)
       })
 

@@ -21,6 +21,15 @@ export default {
     Navbar,
     Footer
   },
+  watch: {
+        $route: {
+            immediate: true,
+            handler(to) {
+              // Set the title if it is not defined on router
+                document.title = to.meta.title || 'Polly';
+            }
+        },
+    }
 
 }
 </script>

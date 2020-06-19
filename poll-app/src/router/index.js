@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
+import Poll from '../views/Poll.vue'
+import NotFound from '../views/NotFound.vue'
 
 Vue.use(VueRouter)
 
@@ -8,15 +10,20 @@ Vue.use(VueRouter)
   {
     path: '/',
     name: 'Home',
-    component: Home
+    component: Home,
+    meta: { title: 'Polly' }
   },
   {
     path: '/poll',
     name: 'Poll',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import('../views/Poll.vue')
+    component: Poll,
+    meta: { title: 'Polly' }
+  },
+  {
+    path: '*',
+    name: 'Not Found',
+    component: NotFound,
+    meta: { title: 'Page not found - Polly' }
   }
 ]
 

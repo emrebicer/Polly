@@ -63,8 +63,8 @@ export default {
       isLoading: true,
       userVoted: false,
       pollData: {},
-      pollID: "123321321",
-      userIP: "132.321.321.321"
+      pollID: String,
+      userIP: String
     };
   },
   methods: {
