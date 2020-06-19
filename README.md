@@ -1,11 +1,27 @@
 # Polly
 Polly is an open-source poll application
-## Back-end
-All of the API endpoints and the website itself is served on **Deno** from a single file called app.ts
-### Run the server
+## Run on your local machine
+* Generate static web files
+```bash
+cd /poll-app
+npm i                   # Install required packages for node
+npm run build           # Build for production
+cp -r dist ../public/   # Copy all files to ../public
 ```
+* Create a .env file and append MONGO_DB_URI variable
+  * Created polls and submitted votes are stored in a mongodb database instance
+  * This uri is required to make the connection between the server and the db
+```bash
+touch .env                                              # Create a file called .env
+echo "MONGO_DB_URI={YOUR_SECRET_MONGODB_URI}" > .env    # Append the uri to the .env file
+```
+### Run the server
+```bash
 deno run --allow-net --allow-write --allow-read --allow-plugin --unstable app.ts
 ```
+## Back-end
+All of the API endpoints and the website itself is served on **Deno** from a single file called app.ts
+
 ### API endpoints
 The API has 3 endpoints for creating a new poll, fetching a poll and voting to a poll
 
