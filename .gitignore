@@ -2,3 +2,4 @@
 .env
 rs
 run_denon.cpp
+public/
