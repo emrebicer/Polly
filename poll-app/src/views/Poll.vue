@@ -55,6 +55,7 @@ import Loading from "@/components/Loading.vue";
 import VoteToPoll from "@/components/VoteToPoll.vue";
 import QrcodeVue from 'qrcode.vue'
 
+import biri from 'biri' 
 import M from "materialize-css";
 
 export default {
@@ -132,9 +133,6 @@ export default {
         return;
       }
 
-      // Let the server get user ip as id
-      // Sending -1 to the server automatically handles it
-      this.userID = '-1'
 
       // Make a request to the back-end server to get the poll details
       let serverResponse = await fetch(
@@ -183,6 +181,10 @@ export default {
     }
   },
   mounted: async function() {
+
+    // Get the unique id for this computer
+    this.userID = await biri()
+
     this.windowLocation = location.href
     M.AutoInit();
     var elems = document.querySelectorAll(".modal");
