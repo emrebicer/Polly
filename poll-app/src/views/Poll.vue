@@ -192,7 +192,10 @@ export default {
     this.modalInstance = instances[0];
 
     // Get the unique id for this computer
-    this.userID = await biri()
+    this.userID = await biri().catch(err =>{
+      console.log(err)
+      return undefined
+    })
 
     if(!this.userID){
 
