@@ -192,16 +192,22 @@ export default {
     this.modalInstance = instances[0];
 
     // Get the unique id for this computer
-    // Safari doesn't support WebRTC so can't get
-    // a unique id on iOS. Use ip addr if necessary
-    let userIP = await fetch("https://api6.ipify.org?format=json")
+    this.userID = await biri()
+
+    if(!this.userID){
+
+      // Safari doesn't support WebRTC so can't get
+      // a unique id on iOS. Use ip addr if necessary
+      let userIP = await fetch("https://api6.ipify.org?format=json")
         .then(response => response.json())
         .then(data => data.ip)
         .catch(err => {
           console.warn(err)
           return undefined
         });
-    this.userID = await biri() || userIP
+
+      this.userID = userIP
+    }
 
     // If both of the biri and user ip failed
     // warn the user
