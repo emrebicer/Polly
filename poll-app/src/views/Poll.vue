@@ -182,15 +182,42 @@ export default {
   },
   mounted: async function() {
 
-    // Get the unique id for this computer
-    this.userID = await biri()
-
+    // Get the full url for sharing the poll
     this.windowLocation = location.href
+
+    // Initialize the materialize framework
     M.AutoInit();
     var elems = document.querySelectorAll(".modal");
     var instances = M.Modal.init(elems, {});
-
     this.modalInstance = instances[0];
+
+    // Get the unique id for this computer
+    // Safari doesn't support WebRTC so can't get
+    // a unique id on iOS. Use ip addr if necessary
+    let userIP = await fetch("https://api6.ipify.org?format=json")
+        .then(response => response.json())
+        .then(data => data.ip)
+        .catch(err => {
+          console.warn(err)
+          return undefined
+        });
+    this.userID = await biri() || userIP
+
+    // If both of the biri and user ip failed
+    // warn the user
+    if(this.userID == undefined){
+      this.modalInstance.options.onCloseEnd = () => {
+        this.$router.push({ path: "/" });
+      }
+      this.showModal(
+        "Oops",
+        `Your browser is restricting access to your IP,
+        please deactivate shields or try accessing the 
+        poll from a different browser.`
+      )
+      return
+    }
+
 
     // Fetch the poll
     this.fetchPoll();
