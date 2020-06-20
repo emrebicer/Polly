@@ -11,7 +11,7 @@
       <PollResults v-bind:pollData="pollData" v-if="userVoted" />
       <VoteToPoll
         v-on:fetchPoll="fetchPoll"
-        v-bind:userIP="userIP"
+        v-bind:userID="userID"
         v-bind:pollID="pollID"
         v-bind:pollData="pollData"
         v-else
@@ -73,7 +73,7 @@ export default {
       userVoted: false,
       pollData: {},
       pollID: String,
-      userIP: String,
+      userID: String,
       windowLocation: String
     };
   },
@@ -132,31 +132,13 @@ export default {
         return;
       }
 
-      // Vue instance
-      let v = this;
-
-      this.userIP = await fetch("https://api6.ipify.org?format=json")
-        .then(response => response.json())
-        .then(data => data.ip)
-        .catch(err => {
-          v.modalInstance.options.onCloseEnd = () => {
-            v.$router.push({ path: "/" });
-          };
-          v.showModal(
-            "Oops",
-            `Your browser is restricting access to your IP,
-                  please deactivate shield or try accessing the 
-                 please deactivate shield or try accessing the 
-                  please deactivate shield or try accessing the 
-                  poll from a different browser; ${err}`
-          );
-
-          return;
-        });
+      // Let the server get user ip as id
+      // Sending -1 to the server automatically handles it
+      this.userID = '-1'
 
       // Make a request to the back-end server to get the poll details
       let serverResponse = await fetch(
-        `/api/get_poll/${this.pollID}/${this.userIP}`,
+        `/api/get_poll/${this.pollID}/${this.userID}`,
         {
           method: "GET"
         }
@@ -170,35 +152,30 @@ export default {
         try {
           this.pollData = response;
           if (!response.success) {
-            v.modalInstance.options.onCloseEnd = () => {
-              v.$router.push({ path: "/" });
+            this.modalInstance.options.onCloseEnd = () => {
+              this.$router.push({ path: "/" });
             };
-            v.showModal(
+            this.showModal(
               "Oops",
               `We couldn't access the poll. ${response.info}`
             );
           } else {
-            v.pollQuestion = response.poll_title;
-            if (!response.user_voted) {
-              // User has not voted update the UI
-              this.userVoted = false;
-            } else {
-              // User already voted, show the results
-              this.userVoted = true;
-            }
-
+            // Fetched the poll details successfully, update the UI
+            this.pollQuestion = response.poll_title;
+            // This will re-render the UI
+            this.userVoted = response.user_voted
             this.isLoading = false;
           }
         } catch (error) {
           // Something went wrong...
-          v.showModal("Oops", `We couldn't access the poll ${error}`);
+          this.showModal("Oops", `We couldn't access the poll ${error}`);
         }
       } else {
         // The http request was not successful
-        v.modalInstance.options.onCloseEnd = () => {
-          v.$router.push({ path: "/" });
+        this.modalInstance.options.onCloseEnd = () => {
+          this.$router.push({ path: "/" });
         };
-        v.showModal(
+        this.showModal(
           "Oops",
           `We couldn't access the poll. (Can't access the back-end server)`
         );

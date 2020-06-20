@@ -117,6 +117,10 @@ router.post("/api/create_poll", async (context) => {
     // Expected uri pattern
     // {domain}/api/get_poll/{poll_id}/{user_id}
 
+    // If the user_id parameter is equal to -1
+    // use the request ip as identifier
+    let usid = context.params.user_id == '-1' ? context.request.ip : context.params.user_id
+
     // Check if the poll exists
     let requestedPoll = await DB_POLLS.findOne({
       poll_id: context.params.poll_id,
@@ -133,7 +137,7 @@ router.post("/api/create_poll", async (context) => {
     // Check if the user has already voted
     let currentUsersVote = await DB_VOTES.findOne({
       poll_id: context.params.poll_id,
-      user_id: context.params.user_id,
+      user_id: usid,
     });
 
     if (currentUsersVote) {
@@ -205,6 +209,10 @@ router.post("/api/create_poll", async (context) => {
         return;
       }
 
+      // If the user_id parameter is equal to -1
+      // use the request ip as identifier
+      let usid = body.user_id == '-1' ? context.request.ip : body.user_id
+
       // Check if the poll with the given id exists
       let requestedPoll = await DB_POLLS.findOne({
         poll_id: body.poll_id,
@@ -221,7 +229,7 @@ router.post("/api/create_poll", async (context) => {
       // Check if the user has already voted
       let didUserVote = await DB_VOTES.findOne({
         poll_id: body.poll_id,
-        user_id: body.user_id,
+        user_id: usid,
       });
 
       if (didUserVote) {
@@ -229,7 +237,7 @@ router.post("/api/create_poll", async (context) => {
         context.response.body = {
           success: false,
           info:
-            `User with the id:${body.user_id} has already voted to the poll with the id:${body.poll_id}`,
+            `User with the id:${usid} has already voted to the poll with the id:${body.poll_id}`,
         };
         return;
       }
@@ -241,7 +249,7 @@ router.post("/api/create_poll", async (context) => {
       // If passes all controls, this vote is valid
       // insert to the DB
       let insertResult = await DB_VOTES.insertOne({
-        user_id: body.user_id,
+        user_id: usid,
         poll_id: body.poll_id,
         vote_date: Date(),
         user_choice_index: body.user_choice_index,

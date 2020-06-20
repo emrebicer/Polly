@@ -30,7 +30,7 @@ export default {
   name: "VoteToPoll",
   props: {
     pollID: String,
-    userIP: String,
+    userID: String,
     pollData: Object
   },
   data: function() {
@@ -61,7 +61,7 @@ export default {
         let requestBody = {
             poll_id: this.pollID,
             user_choice_index: foundCheckedOptionIndex,
-            user_id: this.userIP
+            user_id: this.userID
         }
 
         // Can't refer to Vue in fecth, due to this will reference the function itself
