@@ -17,13 +17,19 @@
         v-else
       />
       <div class="row s12" style="margin-top: 3rem;">
-        <h5 class="col deep-purple-text text-darken-2">Share this poll</h5>
+          <h5 class="row s12 deep-purple-text text-darken-2">Share this poll</h5>
+          <div class="row s12">
+            <a v-on:click="copyLink" class="waves-effect waves-light btn deep-purple darken-2 col">
+              <i class="material-icons left">content_copy</i>Copy link
+            </a>
+          </div>
       </div>
+
       <div class="row s12">
-        <a v-on:click="copyLink" class="waves-effect waves-light btn deep-purple darken-2 col">
-          <i class="material-icons left">content_copy</i>Copy link
-        </a>
+          <h5 class="row s12 deep-purple-text text-darken-2">Or scan the QR code</h5>
+          <qrcode-vue class="row s12" :value="windowLocation" :size="120" level="M"></qrcode-vue>
       </div>
+
     </div>
 
     <!-- Modal -->
@@ -47,6 +53,8 @@
 import PollResults from "@/components/PollResults.vue";
 import Loading from "@/components/Loading.vue";
 import VoteToPoll from "@/components/VoteToPoll.vue";
+import QrcodeVue from 'qrcode.vue'
+
 import M from "materialize-css";
 
 export default {
@@ -54,7 +62,8 @@ export default {
   components: {
     PollResults,
     Loading,
-    VoteToPoll
+    VoteToPoll,
+    QrcodeVue
   },
   data: () => {
     return {
@@ -64,7 +73,8 @@ export default {
       userVoted: false,
       pollData: {},
       pollID: String,
-      userIP: String
+      userIP: String,
+      windowLocation: String
     };
   },
   methods: {
@@ -196,6 +206,7 @@ export default {
     }
   },
   mounted: async function() {
+    this.windowLocation = location.href
     M.AutoInit();
     var elems = document.querySelectorAll(".modal");
     var instances = M.Modal.init(elems, {});
