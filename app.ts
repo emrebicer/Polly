@@ -276,10 +276,18 @@ router.post("/api/create_poll", async (context) => {
       };
       return;
     }
-  });
+  })
+  .get("/api/get_ip", async (context) => {
+    // This is a test route to test if
+    // We can gran the correct ip address
+    // from the server
+    context.response.body = {
+      ip_address: context.request.ip
+    }
+  })
 
 // Initialize the server
-const app = new Application();
+const app = new Application({ proxy: true });
 // Assign the defined routes
 app.use(router.routes());
 app.use(router.allowedMethods());
