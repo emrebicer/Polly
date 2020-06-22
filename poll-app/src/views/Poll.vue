@@ -190,31 +190,11 @@ export default {
     var instances = M.Modal.init(elems, {});
     this.modalInstance = instances[0];
 
-    // Get ip address as id
-    let userIP = await fetch("https://api6.ipify.org?format=json")
-      .then(response => response.json())
-      .then(data => data.ip)
-      .catch(err => {
-        console.warn(err)
-        return undefined
-    });
-
-    this.userID = userIP
-
-    // If can not fetch ip, show a warning
-    if(!this.userID){
-      this.modalInstance.options.onCloseEnd = () => {
-        this.$router.push({ path: "/" });
-      }
-      this.showModal(
-        "Oops",
-        `Your browser is restricting access to your IP,
-        please deactivate shields or try accessing the 
-        poll from a different browser.`
-      )
-      return
-    }
-
+    // Instead of fetching the IP on the Client side
+    // send -1 as user and, and the back-end server
+    // will automatically get the IP address of the
+    // client
+    this.userID = -1
 
     // Fetch the poll
     this.fetchPoll();
