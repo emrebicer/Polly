@@ -1,19 +1,47 @@
-import { Application, Router, send, isHttpError, Status } from "https://deno.land/x/oak/mod.ts";
-import { MongoClient } from "https://deno.land/x/mongo@v0.8.0/mod.ts";
+import { Application, Router, send } from "https://deno.land/x/oak/mod.ts";
+import { MongoClient } from "https://deno.land/x/mongo@v0.22.0/mod.ts";
 import { config } from "https://deno.land/x/dotenv/mod.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 import { existsSync } from "https://deno.land/std/fs/mod.ts";
 
 const PORT_NUMBER = 7777;
-const { MONGO_DB_URI } = config();
+const {
+  host,
+  port,
+  username,
+  password,
+  database,
+} = config();
 
 // Connection to the mongo database
 const client = new MongoClient();
-client.connectWithUri(MONGO_DB_URI);
-const DB = client.database("vote-test");
-// Get the database connections
-const DB_POLLS = DB.collection("polls");
-const DB_VOTES = DB.collection("votes");
+
+var DB: any;
+var DB_POLLS: any;
+var DB_VOTES: any;
+
+await client.connect({
+  db: database,
+  tls: true,
+  servers: [
+    {
+      host: host,
+      port: parseInt(port),
+    },
+  ],
+  credential: {
+    username: username,
+    password: password,
+    db: database,
+    mechanism: "SCRAM-SHA-1",
+  },
+}).then(async () => {
+  DB = await client.database("vote-test");
+  DB_POLLS = await DB.collection("polls");
+  DB_VOTES = await DB.collection("votes");
+}).catch((err) => {
+  console.log("DB err", err);
+});
 
 const router = new Router();
 // API routes are defined and handled here
@@ -25,21 +53,16 @@ router.post("/api/create_poll", async (context) => {
     }
 
 	*/
-  const body = await context.request.body();
-	
-	let requestedPoll:any = {}
-	try{
-		// Convert to JSON from string
-		requestedPoll = JSON.parse(body.value);
-	}
-	catch(err){
-		context.response.body = {
-			success: false,
-			info:
-				`Please provide a valid JSON body`,
-		};
-		return;
-	}
+  let requestedPoll: any = {};
+  try {
+    requestedPoll = await context.request.body({ type: "json" }).value;
+  } catch (err) {
+    context.response.body = {
+      success: false,
+      info: `Please provide a valid JSON body`,
+    };
+    return;
+  }
 
   // Check for the poll title
   if (!requestedPoll.poll_title || requestedPoll.poll_title.length < 1) {
@@ -66,9 +89,9 @@ router.post("/api/create_poll", async (context) => {
 
   // If passed all controls, create the poll and return success
 
-	// Assign an id to each option, this id will be just numbers
-	// starting from 0 to upwards. Could have been another UUID
-	// but I didn't see the necessity of that.
+  // Assign an id to each option, this id will be just numbers
+  // starting from 0 to upwards. Could have been another UUID
+  // but I didn't see the necessity of that.
   let optionsWithIDs = [];
 
   for (
@@ -85,8 +108,8 @@ router.post("/api/create_poll", async (context) => {
   // Generate a unique poll id
   var pollUUID = v4.generate();
 
-	// I don't want dashes(-) on the id, i will just remove them
-	// (avoid complications on raw requests from browser)
+  // I don't want dashes(-) on the id, i will just remove them
+  // (avoid complications on raw requests from browser)
   pollUUID = pollUUID.replace(/-/g, "");
 
   let insertStatus = await DB_POLLS.insertOne({
@@ -94,24 +117,22 @@ router.post("/api/create_poll", async (context) => {
     poll_title: requestedPoll.poll_title,
     poll_options: optionsWithIDs,
     poll_creation_date: Date(),
-	});
-	
-	if(insertStatus){
-		// Insertion was successful
-		context.response.body = {
-			success: true,
-			info: "Successfully created a poll",
-			poll_id: pollUUID,
-		};
-	}
-	else{
-		// Insertion failed
-		context.response.body = {
-			success: false,
-			info: "Error on inserting the poll to the database",
-		};
-	}
+  });
 
+  if (insertStatus) {
+    // Insertion was successful
+    context.response.body = {
+      success: true,
+      info: "Successfully created a poll",
+      poll_id: pollUUID,
+    };
+  } else {
+    // Insertion failed
+    context.response.body = {
+      success: false,
+      info: "Error on inserting the poll to the database",
+    };
+  }
 })
   .get("/api/get_poll/:poll_id/:user_id", async (context) => {
     // Expected uri pattern
@@ -119,11 +140,15 @@ router.post("/api/create_poll", async (context) => {
 
     // If the user_id parameter is equal to -1
     // use the request ip as identifier
-    let usid = context.params.user_id == '-1' ? context.request.ip : context.params.user_id
+    let usid = context.params.user_id == "-1"
+      ? context.request.ip
+      : context.params.user_id;
 
     // Check if the poll exists
-    let requestedPoll = await DB_POLLS.findOne({
+    let requestedPoll: any = await DB_POLLS.findOne({
       poll_id: context.params.poll_id,
+    }, {
+      noCursorTimeout: false,
     });
 
     if (!requestedPoll) {
@@ -135,18 +160,22 @@ router.post("/api/create_poll", async (context) => {
     }
 
     // Check if the user has already voted
-    let currentUsersVote = await DB_VOTES.findOne({
+    let currentUsersVote: any = await DB_VOTES.findOne({
       poll_id: context.params.poll_id,
       user_id: usid,
+    }, {
+      noCursorTimeout: false,
     });
 
     if (currentUsersVote) {
       // User has already voted
 
       // Get the total vote counts for each option
-      let allVotesToThisPoll = await DB_VOTES.find({
+      let allVotesToThisPoll: any = await DB_VOTES.find({
         poll_id: context.params.poll_id,
-      });
+      }, {
+        noCursorTimeout: false,
+      }).toArray();
 
       // Get all of the possible option index and title
       let pollVoteCounts = requestedPoll.poll_options;
@@ -194,13 +223,13 @@ router.post("/api/create_poll", async (context) => {
     };
   })
   .post("/api/vote", async (context) => {
-    const rawBody = await context.request.body();
-
     try {
       // Convert to JSON from string
-      const body = JSON.parse(rawBody.value);
+      const body = await context.request.body({ type: "json" }).value;
 
-      if (!body.poll_id || body.user_choice_index == undefined || !body.user_id) {
+      if (
+        !body.poll_id || body.user_choice_index == undefined || !body.user_id
+      ) {
         context.response.body = {
           success: false,
           info:
@@ -211,11 +240,13 @@ router.post("/api/create_poll", async (context) => {
 
       // If the user_id parameter is equal to -1
       // use the request ip as identifier
-      let usid = body.user_id == '-1' ? context.request.ip : body.user_id
+      let usid = body.user_id == "-1" ? context.request.ip : body.user_id;
 
       // Check if the poll with the given id exists
       let requestedPoll = await DB_POLLS.findOne({
         poll_id: body.poll_id,
+      }, {
+        noCursorTimeout: false,
       });
 
       if (!requestedPoll) {
@@ -230,6 +261,8 @@ router.post("/api/create_poll", async (context) => {
       let didUserVote = await DB_VOTES.findOne({
         poll_id: body.poll_id,
         user_id: usid,
+      }, {
+        noCursorTimeout: false,
       });
 
       if (didUserVote) {
@@ -282,9 +315,9 @@ router.post("/api/create_poll", async (context) => {
     // We can gran the correct ip address
     // from the server
     context.response.body = {
-      ip_address: context.request.ip
-    }
-  })
+      ip_address: context.request.ip,
+    };
+  });
 
 // Initialize the server
 const app = new Application({ proxy: true });
@@ -294,33 +327,33 @@ app.use(router.allowedMethods());
 
 // Serve static content
 app.use(async (context) => {
-  
-  const PUBLIC_FOLDER = 'public'
+  const PUBLIC_FOLDER = "public";
 
-  if(context.request.url.pathname == '/'){
+  if (context.request.url.pathname == "/") {
     await send(context, context.request.url.pathname, {
       root: `${Deno.cwd()}/${PUBLIC_FOLDER}`,
       index: "index.html",
     });
-  }
-  else{
-
-    if(existsSync(Deno.cwd() + '/' + PUBLIC_FOLDER + '/' + context.request.url.pathname.split('/')[1])){
+  } else {
+    if (
+      existsSync(
+        Deno.cwd() + "/" + PUBLIC_FOLDER + "/" +
+          context.request.url.pathname.split("/")[1],
+      )
+    ) {
       // This folder already exists
       await send(context, context.request.url.pathname, {
         root: `${Deno.cwd()}/${PUBLIC_FOLDER}`,
         index: "index.html",
       });
-    }
-    else{
+    } else {
       // This folder doesn't exist, redirect to ./index.html (Vue js routing handles the rest)
-      await send(context, '/', {
+      await send(context, "/", {
         root: `${Deno.cwd()}/${PUBLIC_FOLDER}`,
         index: "index.html",
       });
     }
   }
-
 });
 
 // Listen for incoming requests
