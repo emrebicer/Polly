@@ -4,7 +4,6 @@ import { config } from "https://deno.land/x/dotenv/mod.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 import { existsSync } from "https://deno.land/std/fs/mod.ts";
 
-const PORT_NUMBER = 7777;
 const {
   host,
   port,
@@ -12,6 +11,9 @@ const {
   password,
   database,
 } = config();
+// Check if a port number is passed into Deno
+const ARG_PORT = parse(Deno.args).port
+const PORT_NUMBER = Number(ARG_PORT) || 7777;
 
 // Connection to the mongo database
 const client = new MongoClient();
