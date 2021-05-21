@@ -107,11 +107,14 @@ export default {
       document.getElementById("modalDescription").innerHTML = description;
       this.modalInstance.open();
     },
-    fetchPoll: async function() {
-      // Set as loading
-      this.isLoading = true;
-      this.userVoted = false;
+    fetchPollLoop: async function(){
+      // This would have been 100% better if it was
+      // implemented with sockets, but I am too lazy...
 
+      await this.fetchPoll();
+      setTimeout(this.fetchPollLoop, 1000)
+    },
+    fetchPoll: async function() {
       // Get the poll id from the url
       var url = new URL(window.location.href);
       this.pollID = url.searchParams.get("id");
@@ -197,7 +200,7 @@ export default {
     this.userID = -1
 
     // Fetch the poll
-    this.fetchPoll();
+    this.fetchPollLoop();
   }
 };
 </script>
