@@ -1,5 +1,6 @@
 # Polly
-Polly is an open-source poll application
+Polly is an open-source poll application written in deno. 
+This project is not well structured and it is more of a PoC, rather than a reliable poll application. The back-end consist of a single file named app.ts.
 ## Run on your local machine
 * Generate static web files
 ```bash
@@ -8,18 +9,21 @@ npm i                   # Install required packages for node
 npm run build           # Build for production
 cp -r dist ../public/   # Copy all files to ../public
 ```
-* Create a .env file and append MONGO_DB_URI variable
+* Create a .env file and provide necessary variables for mongodb connection
   * Created polls and submitted votes are stored in a mongodb database instance
-  * This uri is required to make the connection between the server and the db
-```bash
-touch .env                                              # Create a file called .env
-echo "MONGO_DB_URI={YOUR_SECRET_MONGODB_URI}" > .env    # Append the uri to the .env file
+  * These variables are required to make the connection between the server and the db
+```
+host=<CLUSTER_URL>
+port=27017
+username=<DATABASE_USER_USERNAME>
+password=<DATABASE_USER_PASSWORD>
+database=<DATABASE_NAME>
 ```
 ### Run the server
 ```bash
 deno run --allow-net --allow-write --allow-read --allow-plugin --unstable app.ts
 ```
-## Test on Heroku
+## Try it on heroku
 https://pollyy.herokuapp.com
 ## Back-end
 All of the API endpoints and the website itself is served on **Deno** from a single file called app.ts
