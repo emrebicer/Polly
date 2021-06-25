@@ -3,6 +3,7 @@ import { MongoClient } from "https://deno.land/x/mongo@v0.22.0/mod.ts";
 import { config } from "https://deno.land/x/dotenv/mod.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 import { existsSync } from "https://deno.land/std/fs/mod.ts";
+import { parse } from "https://deno.land/std/flags/mod.ts"
 
 const {
   host,
